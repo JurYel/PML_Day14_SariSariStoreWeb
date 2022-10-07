@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/grocery_cart_styles.css' %}"/>
+{% endblock styles %}
+
+{% block title %}
+<title>My Grocery Cart</title>
+{% endblock title %}
+
+{% block links %}
+    <li class="nav-item"><a class="nav-link " aria-content="page" href="{% url 'home' %}">Home</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'inventory_page' %}">Inventory</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'sales_record' %}">Sales Record</a></li>
+{% endblock links %}
+
+{% block content %}
+<article class="mycart-content">
+    <section class="h-100 cart-section" style="background-color: #eee;">
+        <div class="container h-100 py-5">
+            <div class="row d-flex justify-content-center align-items-center h-100">
+                <div class="col-10">
+
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3 class="fw-normal mb-0 text-black">Grocery Cart</h3>
+                        <div>
+                            <p class="mb-0"><span class="text-muted">Sort by:</span> <a href="#!" class="text-body">price <i
+                                    class="fa fa-angle-down mt-1"></i></a></p>
+                        </div>
+                    </div>
+                    <div class="cart-items">
+                        {% for cart_item in cart_items %}
+                            <div class="card rounded-3 mb-3">
+                                <div class="card-body p-4">
+                                    <div class="row d-flex justify-content-between align-items-center">
+                                        <div class="col-md-2 col-lg-2 col-xl-2">
+                                            <img
+                                                    src="{{ cart_item.item.item_img }}"
+                                                    class="img-fluid rounded-3" alt="{{ cart_item.item_bought }}">
+                                        </div>
+                                        <div class="col-md-3 col-lg-3 col-xl-3">
+                                            <p class="lead fw-normal mb-1">{{ cart_item.item_bought }}</p>
+<!--                                            <p class="sub-desc"><span class="text-muted">Size: </span>M <span class="text-muted">Color: </span>Grey-->
+                                            </p>
+                                        </div>
+                                        <div class="col-md-3 col-lg-3 col-xl-2 d-flex">
+                                            <a href="{% url 'decrease_qty_bought' cart_item.id %}" class="btn btn-link px-2"
+                                                    onclick="this.parentNode.querySelector('input[type=number]').stepDown()">
+                                                <i class="fa fa-minus"></i>
+                                            </a>
+
+                                            <input min="0" name="quantity" value="{{ cart_item.qty_bought }}" type="number"
+                                                   class="form-control form-control-sm qty-input"/>
+
+                                            <a href="{% url 'increase_qty_bought' cart_item.id %}" class="btn btn-link px-2"
+                                                    onclick="this.parentNode.querySelector('input[type=number]').stepUp()">
+                                                <i class="fa fa-plus"></i>
+                                            </a>
+                                        </div>
+                                        <div class="col-md-3 col-lg-2 col-xl-2 offset-lg-1">
+                                            <h5 class="mb-0 price-tag">₱{{ cart_item.unit_price }}</h5>
+                                        </div>
+                                        <div class="col-md-1 col-lg-1 col-xl-1 text-end">
+                                            <a href="{% url 'delete_cart_item' cart_item.id %}"><i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i></a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="card">
+                        <div class="card-body">
+                            <a href="{% url 'proceed_to_pay' %}" class="btn btn-primary btn-block btn-lg btn-buy">Proceed to Pay</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section>
+        <div class="container h-100 py-5">
+            <div class="row d-flex  card-container">
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Qty</th>
+                                <th>Unit Price</th>
+                                <th>Subtotal</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            {% for ordered_item in ordered_items %}
+                            <tr>
+                                <td>{{ ordered_item.item_bought }}</td>
+                                <td>{{ ordered_item.qty_bought }}</td>
+                                <td>{{ ordered_item.unit_price }}</td>
+                                <td>{{ ordered_item.subtotal }}</td>
+                            </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card">
+                        <div class="card-body">
+                            <h5>Order Total ({{ item_counts }} {% if items_count > 1 %} item{% else %} items{% endif %}): </h5>
+                            <h4>₱{{ total_price }}</h4>
+                        </div>
+                </div>
+                <div class="card">
+                    <div class="card-body">
+                        <button type="button" data-bs-toggle="modal" data-bs-target="#receiptModal" class="btn btn-primary btn-block btn-lg btn-buy">Checkout Items</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+    <!--Receipt Modal-->
+    <div class="modal fade" id="receiptModal" data-bs-backdrop="static" data-bs-keyboard="false"
+         tabindex="-1" aria-labelledby="receiptModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="receiptModalLabel">Receipt</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"
+                            aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    {% if is_checkout %}
+                    <div class="card">
+                        <div class="card-body mx-4">
+                            <div class="container">
+                                <p class="my-3 mx-5 text-center" style="font-size: 24px;">Thank for your purchase!</p>
+                                <div class="row">
+                                    <ul class="list-unstyled">
+                                        <li class="text-muted mt-1"><span class="text-black">Invoice</span> #{{ invoice_num }}</li>
+                                        <li class="text-black mt-1">{{ date_time }}</li>
+                                    </ul>
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Item</th>
+                                                <th>Qty</th>
+                                                <th>Unit Price</th>
+                                                <th>Subtotal</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for ordered_item in ordered_items %}
+                                                <tr>
+                                                    <td>{{ ordered_item.item_bought }}</td>
+                                                    <td>{{ ordered_item.qty_bought }}</td>
+                                                    <td>{{ ordered_item.unit_price }}</td>
+                                                    <td>{{ ordered_item.subtotal }}</td>
+                                                </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="row text-black">
+                                    <div class="col-xl-12">
+                                        <p class="float-end fw-bold">Total: ₱{{ total_price }}
+                                        </p>
+                                    </div>
+                                    <hr style="border: 2px solid black;">
+                                </div>
+                                <p class="store">Sari-Sari Store ni Lola Teresita</p>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                        ...
+                    {% endif %}
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    {% if is_checkout %}
+                        <a href="{% url 'record_sales' %}" class="btn btn-primary">Understood</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</article>
+
+{% endblock content %}

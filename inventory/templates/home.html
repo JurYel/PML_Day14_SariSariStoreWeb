@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% load static %}
+{% block styles %}
+<link rel="stylesheet" href="{% static 'css/home_style.css' %}"/>
+{% endblock styles %}
+{% block title %}
+<title>Tindahan ni Lola Teresita</title>
+{% endblock title %}
+
+{% block links %}
+<li class="nav-item"><a class="nav-link active" aria-content="page" href="#">Home</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'inventory_page' %}">Inventory</a></li>
+<li class="nav-item"><a class="nav-link" href="{% url 'sales_record' %}">Sales Record</a></li>
+{% endblock links %}
+
+{% block cart_form %}
+    <form class="d-flex">
+        <a href="{% url 'items_cart' %}" class="btn btn-outline-dark" type="submit">
+            <!--                        <i class="bi-cart-fill me-1"></i>-->
+            <i class="fa fa-shopping-cart me-1" aria-hidden="true"></i>
+            Cart
+            <span class="badge bg-dark text-white ms-1 rounded-pill">{{ cart_items_count }}</span>
+        </a>
+    </form>
+{% endblock cart_form %}
+
+{% block header %}
+    <header class="bg-dark py-5">
+        <div class="container px-4 px-lg-5 my-5">
+            <div class="text-center text-white">
+                <h1 class="display-4 fw-bolder">Lapit mga suki</h1>
+            </div>
+        </div>
+    </header>
+{% endblock header %}
+
+{% block content %}
+<section class="py-5">
+    <div class="container px-4 px-lg-5 mt-5">
+        <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
+            {% for item in items %}
+            <div class="col mb-5">
+                <div class="card h-100">
+                    <!-- Product image-->
+                    <img class="card-img-top img-holder" src="media/{{ item.item_img }}" alt="..."/>
+                    <!-- Product details-->
+                    <div class="card-body p-4">
+                        <div class="text-center">
+                            <!-- Product name-->
+                            <h5 class="fw-bolder">{{ item.item_name }}</h5>
+                            <small class="text-muted">Quantity: {{ item.quantity }}</small><br>
+                            <!-- Product price-->
+                            {{ item.price }}
+                        </div>
+                    </div>
+                    <!-- Product actions-->
+                    <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                        <form method="POST" action="{% url 'add_to_cart' item.id %}" class="justify-content-center d-flex item-btns">
+                            {% csrf_token %}
+                            <input class="form-control text-center me-3" id="inputQuantity" type="num" value="1"
+                                   style="max-width: 3rem" name="qty-bought">
+                            <button type="submit" class="btn-add-to-cart">Add to Cart</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock content %}

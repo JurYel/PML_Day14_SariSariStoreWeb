@@ -1,0 +1,17 @@
+{% for item in items %}
+<tr>
+    <td>{{ item.id }}</td>
+    <td><img class="tbl-img" style="width: 100%" src="/media/{{ item.item_img }}"/></td>
+    <td>{{ item.item_name }}</td>
+    <td>{{ item.quantity }}</td>
+    <td>{{ item.price }}</td>
+    <td class="btn-group">
+        <a type="button" href="{% url 'update_fetch' item.id %}" class="edit">
+            <i class="material-icons" data-toggle="tooltip" title="Edit">&#xE254;</i>
+        </a>
+        <a type="button" href="{% url 'delete_fetch' item.id %}" class="delete">
+            <i class="material-icons" data-toggle="tooltip" title="Delete">&#xE872;</i>
+        </a>
+    </td>
+</tr>
+{% endfor %}

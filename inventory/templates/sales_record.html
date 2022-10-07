@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{% static 'css/sales_style.css' %}"/>
+{% endblock styles %}
+
+{% block title %}
+    <title>Sari-Sari Store: Sales Record</title>
+{% endblock title %}
+{% block links %}
+   <li class="nav-item"><a class="nav-link" aria-content="page" href="{% url 'home' %}">Home</a></li>
+    <li class="nav-item"><a class="nav-link" href="{% url 'inventory_page' %}">Inventory</a></li>
+    <li class="nav-item"><a class="nav-link active" href="#">Sales Record</a></li>
+{% endblock links %}
+
+{% block content %}
+    <h2 class="text-center mt-4">Sari-Sari Store: Sales Record</h2>
+    <section>
+            <div class="container px-4 px-lg-5 mt-5">
+                    <div class="table-wrapper">
+                        <div class="table-title">
+                            <div class="row table-header">
+                                <div class="col-sm-6">
+                                    <h2><b>Sales</b>Record</h2>
+                                </div>
+                                <div class="col-sm-6 search-container">
+<!--                                    <input type="search" class="form-control search-field" />-->
+                                    <form method="GET" action="{% url 'search_by_key' %}" class="input-group">
+                                        <input id="search-input" type="search" name="search-input" placeholder="Search..."id="search-input" class="form-control search-field" />
+                                        <button id="search-button" type="submit" class="btn btn-primary">
+                                            <i class="fa fa-search"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                            <div class="row mt-2">
+                                <div class="col-sm-6">
+                                    <form method="GET" action="{% url 'search_by_datetime' %}" class="input-group">
+                                        <input type="text" name="datetimes" value="" class="form-control search-dt" placeholder="Search by date and time.."/>
+<!--                                        <input type="text" name="datetimes" class="form-control search-dt" placeholder="Search by date and time.."/>-->
+                                        <button id="search-button" type="submit" class="btn btn-primary">
+                                            <i class="fa fa-search"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Date & Time</th>
+                                    <th>Item Description</th>
+                                    <th>Quantity</th>
+                                    <th>Unit Price</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sale in sales %}
+                                    <tr>
+                                        <td>{{ sale.datetime }}</td>
+                                        <td>{{ sale.item_name }}</td>
+                                        <td>{{ sale.quantity }}</td>
+                                        <td>{{ sale.unit_price }}</td>
+                                        <td>{{ sale.subtotal }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+            </div>
+    </section>
+{% endblock content %}
+
+{% block scripts %}
+    <script src="{% static 'js/sales_script.js' %}" ></script>
+{% endblock scripts %}
