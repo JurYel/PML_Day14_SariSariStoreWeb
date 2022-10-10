@@ -12,12 +12,8 @@ class Inventory(models.Model):
         return self.item_name
 
 class CartItem(models.Model):
-    item = models.OneToOneField(
-        Inventory,
-        on_delete=models.CASCADE,
-        primary_key=False
-    )
     item_bought = models.CharField(max_length=50)
+    item_img = models.ImageField(upload_to="img_items/", default="img_items/default_item_img.jpg")
     unit_price = models.FloatField(validators=[MinValueValidator(1.0)])
     qty_bought = models.PositiveIntegerField(blank=False, null=False)
     subtotal = models.FloatField(validators=[MinValueValidator(1.0)])

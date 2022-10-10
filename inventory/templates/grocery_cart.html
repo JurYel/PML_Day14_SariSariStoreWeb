@@ -16,6 +16,12 @@
 {% endblock links %}
 
 {% block content %}
+{% for msg in messages %}
+<div class="alert alert-danger">
+    <strong>{{ msg }}</strong>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="close"></button>
+</div>
+{% endfor %}
 <article class="mycart-content">
     <section class="h-100 cart-section" style="background-color: #eee;">
         <div class="container h-100 py-5">
@@ -37,7 +43,7 @@
                                         <div class="row d-flex justify-content-between align-items-center">
                                             <div class="col-md-2 col-lg-2 col-xl-2">
                                                 <img
-                                                        src="{{ cart_item.item.item_img }}"
+                                                        src="/media/{{ cart_item.item_img }}"
                                                         class="img-fluid rounded-3" alt="{{ cart_item.item_bought }}">
                                             </div>
                                             <div class="col-md-3 col-lg-3 col-xl-3">

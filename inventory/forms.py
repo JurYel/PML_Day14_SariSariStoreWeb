@@ -16,6 +16,6 @@ class ItemForm(ModelForm):
         widgets = {
             'item_img': forms.FileInput(attrs={'class': 'form-control'}),
             'item_name': forms.TextInput(attrs={'class': 'form-control'}),
-            'quantity': forms.NumberInput(attrs={'class': 'form-control qty-input'}),
+            'quantity': forms.NumberInput(attrs={'class': 'form-control qty-input', 'min': '1'}),
             'price': forms.TextInput(attrs={'class': 'form-control price-input'})
         }

@@ -78,21 +78,25 @@ def add_to_cart(request, id, qty=None):
 
             subtotal = qty_bought * item.price
 
-            if CartItem.objects.filter(item=item).exists():
-                cart_item = CartItem.objects.filter(item=item).first()
+            if CartItem.objects.filter(item_bought=item.item_name).exists():
+                cart_item = CartItem.objects.filter(item_bought=item.item_name).first()
                 cart_item_qty = int(cart_item.qty_bought + qty_bought)
                 cart_item.qty_bought = cart_item_qty
                 cart_item.subtotal = float(cart_item_qty * item.price)
                 cart_item.save()
             else:
-                cart_item = CartItem.objects.create(item=item, qty_bought=qty_bought,
-                                                    item_bought=item.item_name, subtotal=subtotal,
-                                                    unit_price=item.price)
+                cart_item = CartItem.objects.create(item_img=item.item_img,
+                                                    qty_bought=qty_bought,item_bought=item.item_name,
+                                                    subtotal=subtotal,unit_price=item.price)
                 cart_item.save()
 
             item.quantity = int(item.quantity - qty_bought)
             print(qty_bought)
             item.save()
+
+            if item.quantity <= 0:
+                item.quantity = 0
+                item.save()
 
         return HttpResponseRedirect(reverse('home'))
     except Inventory.DoesNotExist:
@@ -121,7 +125,7 @@ def delete_cart_item(request, id):
     """
     try:
         cart_item = CartItem.objects.get(id=id)
-        item = Inventory.objects.filter(item_name=cart_item.item.item_name).first()
+        item = Inventory.objects.filter(item_name=cart_item.item_bought).first()
         item.quantity = int(item.quantity + cart_item.qty_bought)
         item.save()
         cart_item.delete()
@@ -139,7 +143,10 @@ def increase_qty_bought(request, id):
     """
     try:
         cart_item = CartItem.objects.get(id=id)
-        item = Inventory.objects.filter(item_name=cart_item.item.item_name).first()
+        item = Inventory.objects.filter(item_name=cart_item.item_bought).first()
+        if item.quantity == 0:
+            messages.error(request, "Cant increase quantity, item is out of stock")
+            return HttpResponseRedirect(reverse('items_cart'))
         qty_bought = cart_item.qty_bought + 1
         cart_item.qty_bought = qty_bought
         cart_item.subtotal = float(qty_bought * cart_item.unit_price)
@@ -159,7 +166,7 @@ def decrease_qty_bought(request, id):
     """
     try:
         cart_item = CartItem.objects.get(id=id)
-        item = Inventory.objects.filter(item_name=cart_item.item.item_name).first()
+        item = Inventory.objects.filter(item_name=cart_item.item_bought).first()
         qty_bought = cart_item.qty_bought - 1
         cart_item.qty_bought = qty_bought
         cart_item.subtotal = float(qty_bought * cart_item.unit_price)
@@ -214,7 +221,12 @@ def record_sales(request):
     """
     date_time = datetime.now().strftime("%b %d, %Y, %I:%M %p")
     cart_items = CartItem.objects.all().values()
+    if Inventory.objects.filter(quantity=0).exists():
+        item = Inventory.objects.filter(quantity=0).first()
+
     for cart_item in cart_items:
+        if item.item_name == cart_item['item_bought']:
+            item.delete()
         sale_record = Sales.objects.create(quantity=cart_item['qty_bought'], item_name=cart_item['item_bought'],
                             unit_price=cart_item['unit_price'], subtotal=cart_item['subtotal'])
         sale_record.save()
@@ -236,10 +248,17 @@ def add_item(request):
     if request.method == "POST":
         form = ItemForm(request.POST, request.FILES)
         if form.is_valid():
-            item_img = form.cleaned_data.get("item_img")
+            item_img = request.FILES["item_img"]
             item_name = form.cleaned_data.get("item_name")
             qty = form.cleaned_data.get("quantity")
             price = form.cleaned_data.get("price")
+
+            if qty == 0:
+                messages.error(request, "Quantity can't be less than 1.")
+                return HttpResponseRedirect(reverse('inventory_page'))
+            if price == 0.0:
+                messages.error(request, "Please input a price for the item.")
+                return HttpResponseRedirect(reverse('inventory_page'))
 
             item = Inventory.objects.create(item_img=item_img,
                                             item_name=item_name,
@@ -318,7 +337,7 @@ def update_record(request, id):
                 item = Inventory.objects.get(id=id)
                 print(form.cleaned_data.get('item_img'))
                 if str(form.cleaned_data.get("item_img")).find("default_item_img") == -1:
-                    item.item_img = form.cleaned_data.get("item_img")
+                    item.item_img = request.FILES["item_img"]
                 item.item_name = form.cleaned_data.get("item_name")
                 item.quantity = form.cleaned_data.get("quantity")
                 item.price = form.cleaned_data.get("price")

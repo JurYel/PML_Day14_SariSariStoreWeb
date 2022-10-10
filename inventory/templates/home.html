@@ -45,45 +45,47 @@
     <div class="container px-4 px-lg-5 mt-5">
         <div class="row gx-4 gx-lg-5 row-cols-2 row-cols-md-3 row-cols-xl-4 justify-content-center">
             {% for item in items %}
-            <div class="col mb-5">
-                <div class="card h-100">
-                    <!-- Product image-->
-                    <img class="card-img-top img-holder" src="media/{{ item.item_img }}" alt="..."/>
-                    <!-- Product details-->
-                    <div class="card-body p-4">
-                        <div class="text-center">
-                            <!-- Product name-->
-                            <h5 class="fw-bolder">{{ item.item_name }}</h5>
-                            <small class="text-muted">Quantity: {{ item.quantity }}</small><br>
-                            <!-- Product price-->
-                            {{ item.price }}
+                {% if item.quantity > 0 %}
+                <div class="col mb-5">
+                    <div class="card h-100">
+                        <!-- Product image-->
+                        <img class="card-img-top img-holder" src="media/{{ item.item_img }}" alt="..."/>
+                        <!-- Product details-->
+                        <div class="card-body p-4">
+                            <div class="text-center">
+                                <!-- Product name-->
+                                <h5 class="fw-bolder">{{ item.item_name }}</h5>
+                                <small class="text-muted">Quantity: {{ item.quantity }}</small><br>
+                                <!-- Product price-->
+                                {{ item.price }}
+                            </div>
                         </div>
-                    </div>
-                    <!-- Product actions-->
-                    <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
-                        {% if item.item_name == 'Tanduay' %}
-                        <div class="justify-content-center d-flex item-btns">
-                            <input class="form-control text-center me-3" id="inputQuantity" type="num" value="1"
-                                   style="max-width: 3rem" name="qty-bought">
-                            <!--                            <button type="submit" class="btn-add-to-cart" data-bs-toggle="modal"-->
-                            <!--                                    data-bs-target="#AgeCheckerModal">Add to Cart-->
-                            <!--                            </button>-->
-                            <button type="submit" class="btn-add-to-cart"
-                                    id="age_check" onclick="age_check({{ item.id }})">Add to Cart
-                            </button>
+                        <!-- Product actions-->
+                        <div class="card-footer p-4 pt-0 border-top-0 bg-transparent">
+                            {% if item.item_name == 'Tanduay' %}
+                            <div class="justify-content-center d-flex item-btns">
+                                <input class="form-control text-center me-3" id="inputQuantity" type="num" value="1"
+                                       style="max-width: 3rem" name="qty-bought">
+                                <!--                            <button type="submit" class="btn-add-to-cart" data-bs-toggle="modal"-->
+                                <!--                                    data-bs-target="#AgeCheckerModal">Add to Cart-->
+                                <!--                            </button>-->
+                                <button type="submit" class="btn-add-to-cart"
+                                        id="age_check" onclick="age_check({{ item.id }})">Add to Cart
+                                </button>
+                            </div>
+                            {% else %}
+                            <form method="POST" action="{% url 'add_to_cart' item.id %}"
+                                  class="justify-content-center d-flex item-btns">
+                                {% csrf_token %}
+                                <input class="form-control text-center me-3" id="inputQuantity" type="num" value="1"
+                                       style="max-width: 3rem" name="qty-bought">
+                                <button type="submit" class="btn-add-to-cart">Add to Cart</button>
+                            </form>
+                            {% endif %}
                         </div>
-                        {% else %}
-                        <form method="POST" action="{% url 'add_to_cart' item.id %}"
-                              class="justify-content-center d-flex item-btns">
-                            {% csrf_token %}
-                            <input class="form-control text-center me-3" id="inputQuantity" type="num" value="1"
-                                   style="max-width: 3rem" name="qty-bought">
-                            <button type="submit" class="btn-add-to-cart">Add to Cart</button>
-                        </form>
-                        {% endif %}
                     </div>
                 </div>
-            </div>
+                {% endif%}
             {% endfor %}
         </div>
     </div>
