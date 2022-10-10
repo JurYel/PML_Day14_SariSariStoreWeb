@@ -9,6 +9,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from datetime import datetime
 import string
 import random
+import dateutil.parser as dtparser
 
 # Create your views here.
 def index(request):
@@ -30,7 +31,7 @@ def inventory_page(request):
     template = loader.get_template("inventory.html")
     items = Inventory.objects.all().values()
     form = ItemForm()
-    context = {"items": items, "form": form, "url": "/inventory/add/", "is_update": False, "submit": "Add Item"}
+    context = {"items": items, "form": form, "url": "/inventory/add/", "is_update": False, "is_delete": False,"submit": "Add Item"}
     return HttpResponse(template.render(context, request))
 
 def sales_record(request):
@@ -53,23 +54,35 @@ def items_cart(request):
     context = {"cart_items": cart_items,"is_checkout": False}
     return HttpResponse(template.render(context, request))
 
-def add_to_cart(request, id):
+def add_to_cart(request, id, qty=None):
     """
         Function that performs the process of adding the item to the cart,
         this stores the ordered item to the CartItem model and reduces
         the quantity of the item.
     """
+    print("add_to_cart method reached")
     try:
         if request.method == 'POST':
             item = Inventory.objects.get(id=id)
-            qty_bought = int(request.POST['qty-bought'])
+            if qty:
+                qty_bought = qty
+            else:
+                qty_bought = int(request.POST['qty-bought'])
+
+            if qty_bought > item.quantity:
+                messages.error(request, "Quantity exceeds remaining item quantity.")
+                return HttpResponseRedirect(reverse('home'))
+            elif qty_bought < 1:
+                messages.error(request, "Quantity must be greater than 1.")
+                return HttpResponseRedirect(reverse('home'))
+
             subtotal = qty_bought * item.price
 
             if CartItem.objects.filter(item=item).exists():
                 cart_item = CartItem.objects.filter(item=item).first()
-                qty_bought = int(cart_item.qty_bought + qty_bought)
-                cart_item.qty_bought = qty_bought
-                cart_item.subtotal = float(qty_bought * item.item_price)
+                cart_item_qty = int(cart_item.qty_bought + qty_bought)
+                cart_item.qty_bought = cart_item_qty
+                cart_item.subtotal = float(cart_item_qty * item.price)
                 cart_item.save()
             else:
                 cart_item = CartItem.objects.create(item=item, qty_bought=qty_bought,
@@ -78,9 +91,10 @@ def add_to_cart(request, id):
                 cart_item.save()
 
             item.quantity = int(item.quantity - qty_bought)
+            print(qty_bought)
             item.save()
 
-            return HttpResponseRedirect(reverse('home'))
+        return HttpResponseRedirect(reverse('home'))
     except Inventory.DoesNotExist:
         raise Http404("Add-Cart Error: Item with such id does not exist")
 
@@ -88,6 +102,17 @@ def add_to_cart(request, id):
     context = {"items": items,"is_checkout": False, "cart_items_count": 0}
     template = loader.get_template("home.html")
     return HttpResponse(template.render(context, request))
+
+def check_age(request, id, qty):
+    if request.method == 'POST':
+        age = int(request.POST['age'])
+        if age < 18:
+            messages.error(request,f"Naku, bawal ka pa po nyan, balik ka nalang po in {18-age} years.")
+            return HttpResponseRedirect(reverse('home'))
+        else:
+            add_to_cart(request, id, qty)
+
+    return HttpResponseRedirect(reverse('home'))
 
 def delete_cart_item(request, id):
     """
@@ -241,7 +266,8 @@ def delete_fetch_item(request, id):
         items = Inventory.objects.all().values()
         form = ItemForm(instance=item)
         template = loader.get_template("inventory.html")
-        context = {"form": form, "items": items, "submit": "Delete Item", "is_update": False, "url": "/inventory/delete/delete_item/" + str(id)}
+        context = {"form": form, "items": items, "item": item,"submit": "Delete Item", "is_update": False,
+                   "is_delete": True,"url": "/inventory/delete/delete_item/" + str(id)}
     except Inventory.DoesNotExist:
         raise Http404("Fetch Error: Item with such id does not exist")
 
@@ -272,7 +298,8 @@ def update_fetch_item(request, id):
         items = Inventory.objects.all().values()
         form = ItemForm(instance=item)
         template = loader.get_template("inventory.html")
-        context = {"form": form, "item": item, "items": items, "submit": "Update Item", "is_update": True}
+        context = {"form": form, "item": item, "items": items, "submit": "Update Item",
+                   "is_update": True, "is_delete": False}
     except Inventory.DoesNotExist:
         raise Http404("Fetch Error: Item with such id does not exist")
 
@@ -289,7 +316,9 @@ def update_record(request, id):
             form = ItemForm(request.POST, request.FILES)
             if form.is_valid():
                 item = Inventory.objects.get(id=id)
-                item.item_img = form.cleaned_data.get("item_img")
+                print(form.cleaned_data.get('item_img'))
+                if str(form.cleaned_data.get("item_img")).find("default_item_img") == -1:
+                    item.item_img = form.cleaned_data.get("item_img")
                 item.item_name = form.cleaned_data.get("item_name")
                 item.quantity = form.cleaned_data.get("quantity")
                 item.price = form.cleaned_data.get("price")
@@ -324,6 +353,19 @@ def search_sales_by_datetime(request):
         Incomplete function: Performs query to filter by datetime range
     """
     try:
-        return HttpResponseRedirect(reverse("sales_record"))
+        if request.method == 'GET':
+            if request.GET['datetimes'] == '':
+                return HttpResponseRedirect(reverse('sales_record'))
+            dtime1 = dtparser.parse(request.GET['datetimes'].split('-')[0], fuzzy=True)
+            dtime2 = dtparser.parse(request.GET['datetimes'].split('-')[1], fuzzy=True)
+            # print("dtime1", dtparser.parse(dtime1, fuzzy=True))
+            # print("dtime2", dtparser.parse(dtime2, fuzzy=True))
+            print(type(dtime1))
+
+            sales = Sales.objects.filter(datetime__gte=dtime1, datetime__lte=dtime2)
+            context = {"sales": sales}
+            template = loader.get_template("sales_record.html")
+
+            return HttpResponse(template.render(context, request))
     except ObjectDoesNotExist:
         raise Http404("Search Error: Record with such filter does not exist")

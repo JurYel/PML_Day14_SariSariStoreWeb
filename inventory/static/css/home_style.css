@@ -25,3 +25,16 @@ h1{
     #background: #00bf9a;
     background: #545454;
 }
+
+.qty-input{
+    width: 50px;
+    text-align: center;
+}
+
+.alert {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    margin-top: 20px;
+    margin-bottom: -40px;
+}

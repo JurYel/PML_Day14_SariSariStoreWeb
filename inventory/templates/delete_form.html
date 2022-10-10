@@ -1,0 +1,23 @@
+<form method="POST" enctype="multipart/form-data" action="{% url 'delete' item.id %}">
+    {% csrf_token %}
+    <div class="form-group">
+        <img src="{{ item.item_img.url }}" class="item_img_holder" alt="item image" />
+        {{ form.item_img.label }} <br>
+        {{ form.item_img }}
+    </div>
+    <div class="form-group">
+        {{ form.item_name.label }} <br>
+        {{ form.item_name }}
+    </div>
+    <div class="d-flex gx-5">
+        <div class="form-group">
+            {{ form.quantity.label }} <br>
+            {{ form.quantity }}
+        </div>
+        <div class="form-group">
+            {{ form.price.label }} <br>
+            {{ form.price }}
+        </div>
+    </div>
+    <input type="submit" value="Delete Item" class="btn-submit">
+</form>
